@@ -10,9 +10,21 @@ import (
 	"time"
 )
 
+// Build Version
 const version float32 = 1.18
-const sitesSourceFile = "sites.txt"
-const logsTargetFile = "logs.txt"
+
+// Files Paths
+const (
+	sitesSourceFile = "sites.txt"
+	logsTargetFile  = "logs.txt"
+)
+
+// Commands
+const (
+	monitoringCMD = 1
+	showLogsCMD   = 2
+	exitCMD       = 9
+)
 
 func main() {
 	showIntroduction()
@@ -22,9 +34,47 @@ func main() {
 
 		command := readCommand()
 
-		executeBusinessRules(command)
+		handleCommand(command)
 	}
 }
+
+// Flow Controller
+
+func handleCommand(command int) {
+	switch command {
+
+	case monitoringCMD:
+		initMonitoring()
+		break
+
+	case showLogsCMD:
+		showLogs()
+		break
+
+	case exitCMD:
+		exit()
+		break
+
+	default:
+		errAndDie("Command not found...")
+		break
+
+	}
+}
+
+// Exit Process Handlers
+
+func exit() {
+	showExitMessage("Exiting Program!!!")
+	os.Exit(0)
+}
+
+func errAndDie(msg string) {
+	showExitMessage(msg)
+	os.Exit(-1)
+}
+
+// User Iteraction
 
 func showIntroduction() {
 	fmt.Println("\n\n\nWelcome to the simplest program I have ever wrote!")
@@ -40,24 +90,17 @@ func showMenu() {
 	fmt.Println("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=")
 }
 
-func readCommand() int {
-	fmt.Print(">>> ")
-	var command int
-	fmt.Scan(&command)
-	return command
+func showRequestStatus(pos int, size int, site string, code int, status string) {
+	fmt.Println("- - - - - - - - - - - - - - - - - - - - - -")
+	fmt.Println("Position [", pos, "/", size, "]")
+	fmt.Println("Site     [", site, "]")
+	fmt.Println("Code     [", code, "]")
+	fmt.Println("Status   [", status, "]")
 }
 
-func executeBusinessRules(command int) {
-	switch command {
-	case 1:
-		initMonitoring()
-	case 2:
-		showLogs()
-	case 9:
-		exit()
-	default:
-		errAndDie("Command not found...")
-	}
+func showExitMessage(msg string) {
+	fmt.Println(msg)
+	fmt.Println("Thanks for your time!!!")
 }
 
 func showLogs() {
@@ -65,6 +108,15 @@ func showLogs() {
 		fmt.Println(val)
 	}
 }
+
+func readCommand() int {
+	fmt.Print(">>> ")
+	var command int
+	fmt.Scan(&command)
+	return command
+}
+
+// Http
 
 func initMonitoring() {
 	sites := readListFromFile(sitesSourceFile)
@@ -91,6 +143,8 @@ func initMonitoring() {
 	}
 }
 
+// File IO
+
 func appendLineOnFile(target string, line string) {
 	file, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 
@@ -106,14 +160,6 @@ func registerLog(site string, code int) {
 	now := time.Now().Format("02/01/2006 15:04:05")
 	log := fmt.Sprintf("[%s] %d - %s\n", now, code, site)
 	appendLineOnFile(logsTargetFile, log)
-}
-
-func showRequestStatus(pos int, size int, site string, code int, status string) {
-	fmt.Println("- - - - - - - - - - - - - - - - - - - - - -")
-	fmt.Println("Position [", pos, "/", size, "]")
-	fmt.Println("Site     [", site, "]")
-	fmt.Println("Code     [", code, "]")
-	fmt.Println("Status   [", status, "]")
 }
 
 func readListFromFile(target string) []string {
@@ -143,14 +189,4 @@ func readListFromFile(target string) []string {
 
 	file.Close()
 	return sites
-}
-
-func exit() {
-	fmt.Println("Exiting program...")
-	os.Exit(0)
-}
-
-func errAndDie(msg string) {
-	fmt.Println(msg)
-	os.Exit(-1)
 }
